@@ -4,10 +4,25 @@ Local-first platform for uploading ML models, deploying them as Dockerized infer
 
 **Primary entry point:** [http://localhost:8080](http://localhost:8080) (nginx gateway — dashboard + API)
 
+## Screenshots
+
+| Dashboard | Models |
+|-----------|--------|
+| ![Dashboard](images/dashboard.png) | ![Models](images/models.png) |
+
+| Deployments | Playground |
+|-------------|------------|
+| ![Deployments](images/deployments.png) | ![Playground](images/playground.png) |
+
+| Analytics |
+|-----------|
+| ![Analytics](images/analytics.png) |
+
 ---
 
 ## Table of Contents
 
+- [Screenshots](#screenshots)
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
 - [Verify the Platform Is Running](#verify-the-platform-is-running)
