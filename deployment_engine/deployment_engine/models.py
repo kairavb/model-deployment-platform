@@ -25,7 +25,8 @@ class DeploymentSpec(BaseModel):
     memory_limit: str = "512m"
     cpu_limit: float = 1.0
     env: dict[str, str] = Field(default_factory=dict)
-    inference_image: str
+    build_context_path: str
+    image_tag: str
 
 
 class DeploymentResult(BaseModel):
@@ -33,6 +34,7 @@ class DeploymentResult(BaseModel):
     container_name: str
     host_port: int
     internal_url: str
+    image_tag: str
 
 
 class ContainerStatus(BaseModel):

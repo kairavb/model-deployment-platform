@@ -1,25 +1,30 @@
-from enum import Enum
+from app.core.exceptions import AppError
+from app.models.deployment import DeploymentStatus
 
-
-class DeploymentState(str, Enum):
-    PENDING = "pending"
-    STARTING = "starting"
-    RUNNING = "running"
-    STOPPING = "stopping"
-    STOPPED = "stopped"
-    FAILED = "failed"
-
-
-ALLOWED_TRANSITIONS: dict[DeploymentState, set[DeploymentState]] = {
-    DeploymentState.PENDING: {DeploymentState.STARTING, DeploymentState.FAILED},
-    DeploymentState.STARTING: {DeploymentState.RUNNING, DeploymentState.FAILED},
-    DeploymentState.RUNNING: {DeploymentState.STOPPING, DeploymentState.FAILED},
-    DeploymentState.STOPPING: {DeploymentState.STOPPED, DeploymentState.FAILED},
-    DeploymentState.STOPPED: {DeploymentState.STARTING},
-    DeploymentState.FAILED: {DeploymentState.STOPPED},
+ALLOWED_TRANSITIONS: dict[DeploymentStatus, set[DeploymentStatus]] = {
+    DeploymentStatus.PENDING: {DeploymentStatus.STARTING, DeploymentStatus.FAILED},
+    DeploymentStatus.STARTING: {DeploymentStatus.RUNNING, DeploymentStatus.FAILED},
+    DeploymentStatus.RUNNING: {
+        DeploymentStatus.STOPPING,
+        DeploymentStatus.STARTING,
+        DeploymentStatus.FAILED,
+    },
+    DeploymentStatus.STOPPING: {DeploymentStatus.STOPPED, DeploymentStatus.FAILED},
+    DeploymentStatus.STOPPED: {DeploymentStatus.STARTING},
+    DeploymentStatus.FAILED: {DeploymentStatus.STOPPING, DeploymentStatus.STARTING},
 }
 
+REDEPLOYABLE_STATUSES = (
+    DeploymentStatus.RUNNING,
+    DeploymentStatus.STOPPED,
+    DeploymentStatus.FAILED,
+)
 
-def can_transition(current: DeploymentState, next_state: DeploymentState) -> bool:
-    allowed = ALLOWED_TRANSITIONS.get(current, set())
-    return next_state in allowed
+
+def ensure_transition(current: DeploymentStatus, next_state: DeploymentStatus) -> None:
+    if next_state not in ALLOWED_TRANSITIONS.get(current, set()):
+        raise AppError(
+            f"Invalid deployment transition from {current.value} to {next_state.value}.",
+            "INVALID_DEPLOYMENT_TRANSITION",
+            409,
+        )

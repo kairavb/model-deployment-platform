@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, File, Query, UploadFile, status
 
 from app.dependencies import get_current_user_id, get_db
+from app.modules.deployments.repository import DeploymentRepository
 from app.modules.models.repository import ModelRepository, ModelVersionRepository
 from app.modules.models.schemas import (
     ModelCreate,
@@ -17,7 +18,11 @@ router = APIRouter(prefix="/models")
 
 
 def get_model_service(db=Depends(get_db)) -> ModelService:
-    return ModelService(ModelRepository(db), ModelVersionRepository(db))
+    return ModelService(
+        ModelRepository(db),
+        ModelVersionRepository(db),
+        DeploymentRepository(db),
+    )
 
 
 @router.get("", response_model=PaginatedModelsResponse)

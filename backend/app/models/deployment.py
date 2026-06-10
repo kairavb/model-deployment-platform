@@ -2,11 +2,11 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text, func
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
+from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin, pg_enum
 
 
 class DeploymentStatus(str, enum.Enum):
@@ -41,7 +41,7 @@ class Deployment(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     status: Mapped[DeploymentStatus] = mapped_column(
-        Enum(DeploymentStatus),
+        pg_enum(DeploymentStatus, "deploymentstatus"),
         nullable=False,
         default=DeploymentStatus.PENDING,
     )
@@ -49,7 +49,7 @@ class Deployment(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     host_port: Mapped[int | None] = mapped_column(Integer, nullable=True)
     internal_url: Mapped[str | None] = mapped_column(String(256), nullable=True)
     health_status: Mapped[HealthStatus] = mapped_column(
-        Enum(HealthStatus),
+        pg_enum(HealthStatus, "healthstatus"),
         nullable=False,
         default=HealthStatus.UNKNOWN,
     )
@@ -60,6 +60,7 @@ class Deployment(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     model_version: Mapped["ModelVersion"] = relationship(back_populates="deployments")
     owner: Mapped["User"] = relationship(back_populates="deployments")
     events: Mapped[list["DeploymentEvent"]] = relationship(back_populates="deployment")
+    inference_logs: Mapped[list["InferenceLog"]] = relationship(back_populates="deployment")
 
 
 class DeploymentEvent(Base, UUIDPrimaryKeyMixin):
@@ -83,5 +84,6 @@ class DeploymentEvent(Base, UUIDPrimaryKeyMixin):
     deployment: Mapped[Deployment] = relationship(back_populates="events")
 
 
+from app.models.inference_log import InferenceLog  # noqa: E402
 from app.models.model_version import ModelVersion  # noqa: E402
 from app.models.user import User  # noqa: E402

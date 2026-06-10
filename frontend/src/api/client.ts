@@ -1,10 +1,13 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1";
+import { getApiBaseUrl } from "../utils/api";
+import { getAuthToken } from "../utils/authToken";
 
 export class ApiError extends Error {
   constructor(
     message: string,
     public status: number,
     public code?: string,
+    public hint?: string,
+    public requestId?: string,
   ) {
     super(message);
     this.name = "ApiError";
@@ -15,7 +18,7 @@ export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const token = localStorage.getItem("access_token");
+  const token = getAuthToken();
   const headers = new Headers(options.headers);
 
   headers.set("Content-Type", "application/json");
@@ -23,7 +26,7 @@ export async function apiRequest<T>(
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${getApiBaseUrl()}${path}`, {
     ...options,
     headers,
   });
@@ -32,8 +35,16 @@ export async function apiRequest<T>(
     const errorBody = (await response.json().catch(() => ({}))) as {
       detail?: string;
       code?: string;
+      hint?: string;
+      request_id?: string;
     };
-    throw new ApiError(errorBody.detail ?? "Request failed", response.status, errorBody.code);
+    throw new ApiError(
+      errorBody.detail ?? "Request failed",
+      response.status,
+      errorBody.code,
+      errorBody.hint,
+      errorBody.request_id,
+    );
   }
 
   if (response.status === 204) {

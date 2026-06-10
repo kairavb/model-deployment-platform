@@ -13,7 +13,9 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 
     models: Mapped[list["MLModel"]] = relationship(back_populates="owner")
     deployments: Mapped[list["Deployment"]] = relationship(back_populates="owner")
+    api_keys: Mapped[list["ApiKey"]] = relationship(back_populates="owner")
 
 
+from app.models.api_key import ApiKey  # noqa: E402
 from app.models.deployment import Deployment  # noqa: E402
 from app.models.model import MLModel  # noqa: E402

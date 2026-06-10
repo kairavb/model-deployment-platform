@@ -1,10 +1,8 @@
 from uuid import UUID
 
-from deployment_engine import DockerDeploymentEngine
 from fastapi import APIRouter, Depends, Query
 
-from app.config import settings
-from app.dependencies import get_current_user_id, get_db
+from app.dependencies import get_current_user_id, get_db, get_deployment_engine
 from app.modules.deployments.repository import DeploymentRepository
 from app.modules.logs.schemas import LogsResponse
 from app.modules.logs.service import LogsService
@@ -14,12 +12,7 @@ router = APIRouter(prefix="/deployments")
 
 def get_logs_service(
     db=Depends(get_db),
-    deployment_engine: DockerDeploymentEngine = Depends(
-        lambda: DockerDeploymentEngine(
-            docker_network=settings.docker_network,
-            inference_images=settings.inference_images,
-        )
-    ),
+    deployment_engine=Depends(get_deployment_engine),
 ) -> LogsService:
     return LogsService(DeploymentRepository(db), deployment_engine)
 

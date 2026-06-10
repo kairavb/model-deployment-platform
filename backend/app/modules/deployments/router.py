@@ -1,37 +1,31 @@
 from uuid import UUID
 
-from deployment_engine import DockerDeploymentEngine
 from fastapi import APIRouter, Depends, Query, status
 
-from app.config import settings
-from app.dependencies import get_current_user_id, get_db
+from app.dependencies import get_current_user_id, get_db, get_deployment_engine
 from app.models.deployment import DeploymentStatus
 from app.modules.deployments.repository import DeploymentEventRepository, DeploymentRepository
 from app.modules.deployments.schemas import (
     DeploymentCreate,
     DeploymentEventResponse,
     DeploymentResponse,
+    DeploymentRollback,
     PaginatedDeploymentsResponse,
 )
 from app.modules.deployments.service import DeploymentService
+from app.modules.models.repository import ModelVersionRepository
 
 router = APIRouter(prefix="/deployments")
 
 
-def get_deployment_engine() -> DockerDeploymentEngine:
-    return DockerDeploymentEngine(
-        docker_network=settings.docker_network,
-        inference_images=settings.inference_images,
-    )
-
-
 def get_deployment_service(
     db=Depends(get_db),
-    deployment_engine: DockerDeploymentEngine = Depends(get_deployment_engine),
+    deployment_engine=Depends(get_deployment_engine),
 ) -> DeploymentService:
     return DeploymentService(
         DeploymentRepository(db),
         DeploymentEventRepository(db),
+        ModelVersionRepository(db),
         deployment_engine,
     )
 
@@ -63,6 +57,25 @@ async def get_deployment(
     service: DeploymentService = Depends(get_deployment_service),
 ) -> DeploymentResponse:
     return await service.get_deployment(user_id, deployment_id)
+
+
+@router.post("/{deployment_id}/redeploy", response_model=DeploymentResponse)
+async def redeploy_deployment(
+    deployment_id: UUID,
+    user_id: UUID = Depends(get_current_user_id),
+    service: DeploymentService = Depends(get_deployment_service),
+) -> DeploymentResponse:
+    return await service.redeploy_deployment(user_id, deployment_id)
+
+
+@router.post("/{deployment_id}/rollback", response_model=DeploymentResponse)
+async def rollback_deployment(
+    deployment_id: UUID,
+    payload: DeploymentRollback = DeploymentRollback(),
+    user_id: UUID = Depends(get_current_user_id),
+    service: DeploymentService = Depends(get_deployment_service),
+) -> DeploymentResponse:
+    return await service.rollback_deployment(user_id, deployment_id, payload)
 
 
 @router.post("/{deployment_id}/stop", response_model=DeploymentResponse)

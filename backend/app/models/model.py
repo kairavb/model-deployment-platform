@@ -1,11 +1,11 @@
 import enum
 import uuid
 
-from sqlalchemy import Enum, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
+from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin, pg_enum
 
 
 class ModelFramework(str, enum.Enum):
@@ -26,7 +26,10 @@ class MLModel(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    framework: Mapped[ModelFramework] = mapped_column(Enum(ModelFramework), nullable=False)
+    framework: Mapped[ModelFramework] = mapped_column(
+        pg_enum(ModelFramework, "modelframework"),
+        nullable=False,
+    )
 
     owner: Mapped["User"] = relationship(back_populates="models")
     versions: Mapped[list["ModelVersion"]] = relationship(back_populates="model")

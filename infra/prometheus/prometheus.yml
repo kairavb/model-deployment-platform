@@ -9,6 +9,7 @@ scrape_configs:
     metrics_path: /metrics
 
   - job_name: "ai-platform-inference"
-    static_configs:
-      - targets: []
-    metrics_path: /metrics
+    file_sd_configs:
+      - files:
+          - /etc/prometheus/targets/inference_targets.json
+        refresh_interval: 30s

@@ -49,3 +49,12 @@ export interface PredictRequest {
 export interface PredictResponse {
   outputs: unknown[];
 }
+
+export interface InferenceLogResponse {
+  id: string;
+  deployment_id: string;
+  status_code: number;
+  latency_ms: number;
+  error_message: string | null;
+  created_at: string;
+}

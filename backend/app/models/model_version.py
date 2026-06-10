@@ -2,11 +2,11 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base, UUIDPrimaryKeyMixin
+from app.db.base import Base, UUIDPrimaryKeyMixin, pg_enum
 
 
 class ModelVersionStatus(str, enum.Enum):
@@ -34,7 +34,7 @@ class ModelVersion(Base, UUIDPrimaryKeyMixin):
     input_schema_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     output_schema_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     status: Mapped[ModelVersionStatus] = mapped_column(
-        Enum(ModelVersionStatus),
+        pg_enum(ModelVersionStatus, "modelversionstatus"),
         nullable=False,
         default=ModelVersionStatus.UPLOADED,
     )

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-mkdir -p storage/models
+mkdir -p storage/models storage/builds storage/prometheus
+echo '[]' > storage/prometheus/inference_targets.json
 
-echo "Storage directory ready."
+echo "Storage directories ready."

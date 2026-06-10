@@ -16,7 +16,7 @@ class DeploymentCreate(BaseModel):
 
 
 class DeploymentResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
     id: UUID
     model_version_id: UUID
@@ -41,7 +41,28 @@ class DeploymentEventResponse(BaseModel):
     deployment_id: UUID
     event_type: str
     message: str
-    metadata_json: dict | None = Field(default=None, validation_alias="metadata")
+    metadata_json: dict | None = None
+    created_at: datetime
+
+
+class DeploymentRollback(BaseModel):
+    model_version_id: UUID | None = None
+
+
+class DeploymentStatsResponse(BaseModel):
+    request_count: int
+    error_count: int
+    avg_latency_ms: float
+
+
+class InferenceLogResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    deployment_id: UUID
+    status_code: int
+    latency_ms: float
+    error_message: str | None
     created_at: datetime
 
 

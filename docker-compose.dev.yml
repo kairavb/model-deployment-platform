@@ -4,12 +4,18 @@ services:
       context: .
       dockerfile: backend/Dockerfile
       target: development
+    environment:
+      MODEL_STORAGE_PATH: /storage/models
+      DEPLOYMENT_BUILD_PATH: /storage/builds
+      PROMETHEUS_TARGETS_PATH: /storage/prometheus/inference_targets.json
+      DEBUG: "true"
     volumes:
       - ./backend:/app/backend
       - ./deployment_engine:/app/deployment_engine
+      - ./storage/models:/storage/models
+      - ./storage/builds:/storage/builds
+      - ./storage/prometheus:/storage/prometheus
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-    environment:
-      DEBUG: "true"
 
   frontend:
     build:
