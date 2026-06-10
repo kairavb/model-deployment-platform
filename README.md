@@ -368,6 +368,7 @@ docker compose logs -f backend
 | Symptom | Likely cause | Fix |
 |---------|--------------|-----|
 | `DEPLOYMENT_FAILED` | Docker build error, health check timeout | Check backend logs; open deployment **Logs** tab in UI |
+| `All connection attempts failed` | Inference container not reachable yet, or it crashed on startup | Wait and **redeploy**; check steps below |
 | `MODEL_FILE_MISSING` | Model file not on disk | Re-upload the model version |
 | `DEPLOYMENT_LIMIT_REACHED` | More than 5 active deployments | Stop or delete unused deployments |
 | `No host ports available` | Ports 9000–9999 exhausted | Stop old inference containers: `docker ps` and remove stale ones |
@@ -377,6 +378,41 @@ Check inference containers directly:
 ```bash
 docker ps --filter "label=ai-platform.deployment_id"
 ```
+
+#### `Deployment failed: All connection attempts failed`
+
+This means the backend started an inference container but could not reach it on the Docker network — usually because the server was still starting, or the container crashed while loading your model.
+
+**What to do (in order):**
+
+1. **Redeploy** — open the deployment → **Redeploy** (or delete and create again). Image build is cached, so the second attempt is faster.
+
+2. **Check the model file** — must be a valid **scikit-learn** `.pkl` or `.joblib` file trained with a compatible sklearn version. Re-create with the README sample script if unsure.
+
+3. **Inspect backend logs** during deploy:
+
+```bash
+docker compose logs -f backend
+```
+
+Look for `Building image`, `Starting container`, then errors.
+
+4. **Check for a crashed inference container** (right after a failed deploy):
+
+```bash
+docker ps -a | grep inference-
+docker logs inference-<deployment-id>   # if the container still exists
+```
+
+5. **Confirm Docker networking** — backend and inference containers must share the `ai-platform-net` network (default in `docker compose`).
+
+6. **Increase the health timeout** in `.env` if builds are slow:
+
+```
+DEPLOYMENT_HEALTH_TIMEOUT_SECONDS=120
+```
+
+Then restart: `docker compose up -d backend`
 
 ### Predictions return errors
 
